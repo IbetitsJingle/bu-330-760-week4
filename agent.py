@@ -12,7 +12,7 @@ load_dotenv()
 #   "google-gla:gemini-2.5-flash"       (needs GOOGLE_API_KEY)
 #   "openai:gpt-4o-mini"                (needs OPENAI_API_KEY)
 #   "anthropic:claude-sonnet-4-6"    (needs ANTHROPIC_API_KEY)
-MODEL = "google-gla:gemini-3.1-pro-preview"
+MODEL = "google-gla:gemini-2.5-flash"
 
 agent = Agent(
     MODEL,
@@ -34,19 +34,22 @@ def calculator_tool(expression: str) -> str:
     return calculate(expression)
 
 
-# TODO: Implement this tool by uncommenting the code below and replacing
-# the ... with your implementation. The tool should:
-#   1. Read products.json using json.load() (json is already imported above)
-#   2. If the product_name is in the catalog, return its price as a string
-#   3. If not found, return the list of available product names so the agent
-#      can try again with the correct name
-#
-# @agent.tool_plain
-# def product_lookup(product_name: str) -> str:
-#     """Look up the price of a product by name.
-#     Use this when a question asks about product prices from the catalog.
-#     """
-#     ...
+@agent.tool_plain
+def product_lookup(product_name: str) -> str:
+    """Look up the price of a product by name.
+    Use this when a question asks about product prices from the catalog.
+    """
+    # Read the product catalog from the JSON file
+    with open("products.json") as f:
+        catalog = json.load(f)
+    
+    # Check if the product exists (exact match)
+    if product_name in catalog:
+        return f"{product_name}: ${catalog[product_name]}"
+    
+    # If not found, tell the agent what products ARE available
+    available = ", ".join(catalog.keys())
+    return f"Product '{product_name}' not found. Available products: {available}"
 
 
 def load_questions(path: str = "math_questions.md") -> list[str]:
